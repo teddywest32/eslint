@@ -328,6 +328,40 @@ ruleTester.run("multiline-comment-style", rule, {
         {
             code: `
                 /*
+                 * the following line
+                *
+                 * is blank
+                 */
+            `,
+            output: `
+                /*
+                 * the following line
+                 *
+                 * is blank
+                 */
+            `,
+            errors: [{ message: ALIGNMENT_ERROR, line: 4 }]
+        },
+        {
+            code: `
+                /*
+                 * the following line
+                  *
+                 * is blank
+                 */
+            `,
+            output: `
+                /*
+                 * the following line
+                 *
+                 * is blank
+                 */
+            `,
+            errors: [{ message: ALIGNMENT_ERROR, line: 4 }]
+        },
+        {
+            code: `
+                /*
                  * foo
                  * bar
                  */
