@@ -11,20 +11,20 @@ const assert = require("chai").assert;
 const EXECUTABLE_PATH = require("path").resolve(`${__dirname}/../../bin/eslint.js`);
 
 /**
-* Returns a Promise for when a child process exits
-* @param {ChildProcess} exitingProcess The child process
-* @returns {Promise<number>} A Promise that fulfills with the exit code when the child process exits
-*/
+ * Returns a Promise for when a child process exits
+ * @param {ChildProcess} exitingProcess The child process
+ * @returns {Promise<number>} A Promise that fulfills with the exit code when the child process exits
+ */
 function awaitExit(exitingProcess) {
     return new Promise(resolve => exitingProcess.once("exit", resolve));
 }
 
 /**
-* Asserts that the exit code of a given child process will equal the given value.
-* @param {ChildProcess} exitingProcess The child process
-* @param {number} expectedExitCode The expected exit code of the child process
-* @returns {Promise} A Promise that fufills if the exit code ends up matching, and rejects otherwise.
-*/
+ * Asserts that the exit code of a given child process will equal the given value.
+ * @param {ChildProcess} exitingProcess The child process
+ * @param {number} expectedExitCode The expected exit code of the child process
+ * @returns {Promise} A Promise that fufills if the exit code ends up matching, and rejects otherwise.
+ */
 function assertExitCode(exitingProcess, expectedExitCode) {
     return awaitExit(exitingProcess).then(exitCode => {
         assert.strictEqual(exitCode, expectedExitCode, `Expected an exit code of ${expectedExitCode} but got ${exitCode}.`);
@@ -32,11 +32,11 @@ function assertExitCode(exitingProcess, expectedExitCode) {
 }
 
 /**
-* Returns a Promise for the stdout of a process.
-* @param {ChildProcess} runningProcess The child process
-* @returns {Promise<{stdout: string, stderr: string}>} A Promise that fulfills with all of the
-* stdout and stderr output produced by the process when it exits.
-*/
+ * Returns a Promise for the stdout of a process.
+ * @param {ChildProcess} runningProcess The child process
+ * @returns {Promise<{stdout: string, stderr: string}>} A Promise that fulfills with all of the
+ * stdout and stderr output produced by the process when it exits.
+ */
 function getOutput(runningProcess) {
     let stdout = "";
     let stderr = "";
@@ -50,11 +50,11 @@ describe("bin/eslint.js", () => {
     const forkedProcesses = new Set();
 
     /**
-    * Forks the process to run an instance of ESLint.
-    * @param {string[]} [args] An array of arguments
-    * @param {Object} [options] An object containing options for the resulting child process
-    * @returns {ChildProcess} The resulting child process
-    */
+     * Forks the process to run an instance of ESLint.
+     * @param {string[]} [args] An array of arguments
+     * @param {Object} [options] An object containing options for the resulting child process
+     * @returns {ChildProcess} The resulting child process
+     */
     function runESLint(args, options) {
         const newProcess = childProcess.fork(EXECUTABLE_PATH, args, Object.assign({ silent: true }, options));
 
@@ -141,10 +141,14 @@ describe("bin/eslint.js", () => {
     });
 
     describe("running on files", () => {
-        it("has exit code 0 if no linting errors occur", () => assertExitCode(runESLint(["bin/eslint.js"]), 0));
-        it("has exit code 0 if a linting warning is reported", () => assertExitCode(runESLint(["bin/eslint.js", "--env", "es6", "--no-eslintrc", "--rule", "semi: [1, never]"]), 0));
-        it("has exit code 1 if a linting error is reported", () => assertExitCode(runESLint(["bin/eslint.js", "--env", "es6", "--no-eslintrc", "--rule", "semi: [2, never]"]), 1));
-        it("has exit code 1 if a syntax error is thrown", () => assertExitCode(runESLint(["README.md"]), 1));
+        it("has exit code 0 if no linting errors occur", () =>
+            assertExitCode(runESLint(["bin/eslint.js", "--rulesdir=tools/internal-rules"]), 0));
+        it("has exit code 0 if a linting warning is reported", () =>
+            assertExitCode(runESLint(["bin/eslint.js", "--env", "es6", "--no-eslintrc", "--rule", "semi: [1, never]"]), 0));
+        it("has exit code 1 if a linting error is reported", () =>
+            assertExitCode(runESLint(["bin/eslint.js", "--env", "es6", "--no-eslintrc", "--rule", "semi: [2, never]"]), 1));
+        it("has exit code 1 if a syntax error is thrown", () =>
+            assertExitCode(runESLint(["README.md", "--rulesdir=tools/internal-rules"]), 1));
     });
 
     describe("automatically fixing files", () => {
@@ -301,7 +305,7 @@ describe("bin/eslint.js", () => {
 
     describe("handling crashes", () => {
         it("prints the error message to stderr in the event of a crash", () => {
-            const child = runESLint(["--rule=no-restricted-syntax:[error, 'Invalid Selector [[[']", "Makefile.js"]);
+            const child = runESLint(["--rule=no-restricted-syntax:[error, 'Invalid Selector [[[']", "Makefile.js", "--rulesdir=tools/internal-rules"]);
             const exitCodeAssertion = assertExitCode(child, 1);
             const outputAssertion = getOutput(child).then(output => {
                 const expectedSubstring = "Syntax error in selector";
@@ -331,7 +335,7 @@ describe("bin/eslint.js", () => {
 
     describe("emitting a warning for ecmaFeatures", () => {
         it("does not emit a warning when it does not find an ecmaFeatures option", () => {
-            const child = runESLint(["Makefile.js"]);
+            const child = runESLint(["Makefile.js", "--rulesdir=tools/internal-rules"]);
 
             const exitCodePromise = assertExitCode(child, 0);
             const outputPromise = getOutput(child).then(output => assert.strictEqual(output.stderr, ""));
@@ -339,7 +343,7 @@ describe("bin/eslint.js", () => {
             return Promise.all([exitCodePromise, outputPromise]);
         });
         it("emits a warning when it finds an ecmaFeatures option", () => {
-            const child = runESLint(["-c", "tests/fixtures/config-file/ecma-features/.eslintrc.yml", "Makefile.js"]);
+            const child = runESLint(["-c", "tests/fixtures/config-file/ecma-features/.eslintrc.yml", "Makefile.js", "--rulesdir=tools/internal-rules"]);
 
             const exitCodePromise = assertExitCode(child, 0);
             const outputPromise = getOutput(child).then(output => {

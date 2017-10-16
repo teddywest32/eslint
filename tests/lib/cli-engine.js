@@ -115,7 +115,7 @@ describe("CLIEngine", () => {
 
         it("should report the total and per file errors when using local cwd .eslintrc", () => {
 
-            engine = new CLIEngine();
+            engine = new CLIEngine({ rulePaths: ["tools/internal-rules"] });
 
             const report = engine.executeOnText("var foo = 'bar';");
 
@@ -143,7 +143,8 @@ describe("CLIEngine", () => {
                     "eol-last": 1,
                     strict: 1,
                     "no-unused-vars": 1
-                }
+                },
+                rulePaths: ["tools/internal-rules"]
             });
 
             const report = engine.executeOnText("var foo = 'bar';");
@@ -588,7 +589,8 @@ describe("CLIEngine", () => {
 
             engine = new CLIEngine({
                 cwd: originalDir,
-                configFile: ".eslintrc.yml"
+                configFile: ".eslintrc.yml",
+                rulePaths: ["tools/internal-rules"]
             });
 
             const report = engine.executeOnFiles(["lib/cli*.js"]);
@@ -602,7 +604,8 @@ describe("CLIEngine", () => {
 
             engine = new CLIEngine({
                 cwd: originalDir,
-                configFile: ".eslintrc.yml"
+                configFile: ".eslintrc.yml",
+                rulePaths: ["tools/internal-rules"]
             });
 
             const report = engine.executeOnFiles(["lib/cli*.js", "lib/cli.?s", "lib/{cli,cli-engine}.js"]);
@@ -1853,9 +1856,9 @@ describe("CLIEngine", () => {
             describe("when the cacheFile is a directory or looks like a directory", () => {
 
                 /**
-                * helper method to delete the cache files created during testing
-                * @returns {void}
-                */
+                 * helper method to delete the cache files created during testing
+                 * @returns {void}
+                 */
                 function deleteCacheDir() {
                     try {
                         fs.unlinkSync("./tmp/.cacheFileDir/.cache_hashOfCurrentWorkingDirectory");
@@ -2166,8 +2169,10 @@ describe("CLIEngine", () => {
                 // delete the file from the file system
                 fs.unlinkSync(toBeDeletedFile);
 
-                // file-entry-cache@2.0.0 will remove from the cache deleted files
-                // even when they were not part of the array of files to be analyzed
+                /*
+                 * file-entry-cache@2.0.0 will remove from the cache deleted files
+                 * even when they were not part of the array of files to be analyzed
+                 */
                 engine.executeOnFiles([badFile, goodFile]);
 
                 cache = JSON.parse(fs.readFileSync(cacheFile));
@@ -2205,9 +2210,11 @@ describe("CLIEngine", () => {
 
                 assert.isTrue(typeof cache[testFile2] === "object", "the entry for the test-file2 is in the cache");
 
-                // we pass a different set of files minus test-file2
-                // previous version of file-entry-cache would remove the non visited
-                // entries. 2.0.0 version will keep them unless they don't exist
+                /*
+                 * we pass a different set of files minus test-file2
+                 * previous version of file-entry-cache would remove the non visited
+                 * entries. 2.0.0 version will keep them unless they don't exist
+                 */
                 engine.executeOnFiles([badFile, goodFile]);
 
                 cache = JSON.parse(fs.readFileSync(cacheFile));
@@ -2736,7 +2743,7 @@ describe("CLIEngine", () => {
         it("should report 5 error messages when looking for errors only", () => {
 
             process.chdir(originalDir);
-            const engine = new CLIEngine();
+            const engine = new CLIEngine({ rulePaths: ["tools/internal-rules"] });
 
             const report = engine.executeOnText("var foo = 'bar';");
             const errorResults = CLIEngine.getErrorResults(report.results);
@@ -2931,7 +2938,8 @@ describe("CLIEngine", () => {
                     "no-trailing-spaces": 0,
                     strict: 0,
                     quotes: 0
-                }
+                },
+                rulePaths: ["tools/internal-rules"]
             };
 
             const eslintCLI = new CLIEngine(config);
@@ -2958,7 +2966,8 @@ describe("CLIEngine", () => {
                     "no-trailing-spaces": 0,
                     strict: 0,
                     quotes: 0
-                }
+                },
+                rulePaths: ["tools/internal-rules"]
             };
 
             const eslintCLI = new CLIEngine(config);
